@@ -27,12 +27,6 @@ class TreeNode:
         """
         return self.W_state_val / max(self.N_num_visits, 1)
 
-    def __hash__(self):
-        return self.state.__hash__()
-
-    def __eq__(self, other: TreeNode):
-        return self.state.__eq__(other.state)
-
 
 class MonteCarloTS:
     curr: TreeNode
@@ -128,7 +122,7 @@ class MonteCarloTS:
 
     def get_improved_policy(self, curr: TreeNode, include_empty_spots: bool = False) -> Union[
         Tuple[list, list], np.ndarray]:
-        array = np.zeros(4096)
+        array = np.zeros(curr.state.policy_size())
 
         sum_visits = max(curr.N_num_visits - 1, 1)
 

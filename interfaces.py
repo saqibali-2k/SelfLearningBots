@@ -34,12 +34,11 @@ class State:
         """
         raise NotImplementedError
 
-    def __hash__(self):
+    def policy_size(self) -> int:
+        """
+        Return the size of the policy vector, that is the maximum number of possible moves at a given time.
+        """
         raise NotImplementedError
-
-    def __eq__(self, other: State):
-        raise NotImplementedError
-
 
 class Nnet:
     def load_weights(self, path: str):
