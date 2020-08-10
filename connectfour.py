@@ -40,10 +40,10 @@ class Connect4Game(Game):
             if self.game_over:
                 self.reward = self.turn
 
-            tie = False
+            tie = True
             for i in range(7):
                 if self.p1_array[0, i] == 0 or self.p2_array[0, i] == 0:
-                    tie = True
+                    tie = False
                     break
             if tie:
                 self.game_over = True
