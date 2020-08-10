@@ -4,6 +4,9 @@ from typing import Tuple, Union
 from random import choices
 import numpy as np
 
+ALPHA = 0.8
+EPSILON = 0.2
+
 NUM_SIMULATIONS = 200
 C_PUCT = 1.0
 
@@ -93,14 +96,17 @@ class MonteCarloTS:
         else:
             best_action, selected_child, max_u = None, None, -float("inf")
             sum_visits = curr.N_num_visits
+            legal_moves = curr.state.get_actions()
+            dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
+            for i, action in enumerate(legal_moves):
 
-            for action in curr.state.get_actions():
+                multiplier = (1 - EPSILON) * C_PUCT * self.get_policy(curr, action) * EPSILON * dirichlet_noise[i]
+
                 if action in curr.children:
                     node = curr.children[action]
-                    u = node.get_Q() + C_PUCT * self.get_policy(curr, action) * (
-                            np.sqrt(sum_visits) / (1 + node.N_num_visits))
+                    u = node.get_Q() + multiplier * np.sqrt(sum_visits) / (1 + node.N_num_visits)
                 else:
-                    u = C_PUCT * self.get_policy(curr, action) * np.sqrt(sum_visits + 1e-8)  # to encourage exploring
+                    u = multiplier * np.sqrt(sum_visits + 1e-8)  # to encourage exploring
 
                 if u > max_u:
                     max_u = u
