@@ -43,6 +43,7 @@ class State:
         """
         raise NotImplementedError
 
+
 class Nnet:
     def load_weights(self, path: str):
         """Loads weights into the neural network from storage in path.
@@ -101,5 +102,3 @@ class Game:
         """
 
         raise NotImplementedError
-
-
