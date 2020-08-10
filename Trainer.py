@@ -95,12 +95,14 @@ class Trainer:
 
         game = self.game_class()
         mcts = MonteCarloTS(game.state(), best_model)
+        turn_count = 0
 
         visited_nodes = []
         while not game.is_over():
             visited_nodes.append(mcts.curr)
-            move = mcts.search()
+            move = mcts.search(turn_count)
             game.take_action(move)
+            turn_count += 1
 
         turn_multiplier = 1
         for node in visited_nodes[::-1]:
@@ -152,28 +154,32 @@ class Trainer:
         else:
             turns = {"best": "p2",
                      "new": "p1"}
-
+        turn_count = 0
         while not game.is_over():
             if turns["best"] == "p1":
-                move = mcts_best.search(training=True)
+                move = mcts_best.search(turn_count)
                 game.take_action(move)
                 mcts_new.enemy_move(move)
+                turn_count += 1
 
-                move = mcts_new.search(training=True)
+                move = mcts_new.search(turn_count)
                 if move is None:
                     break
                 game.take_action(move)
                 mcts_best.enemy_move(move)
+                turn_count += 1
             else:
-                move = mcts_new.search(training=True)
+                move = mcts_new.search(turn_count)
                 game.take_action(move)
                 mcts_best.enemy_move(move)
+                turn_count += 1
 
-                move = mcts_best.search(training=True)
+                move = mcts_best.search(turn_count)
                 if move is None:
                     break
                 game.take_action(move)
                 mcts_new.enemy_move(move)
+                turn_count += 1
 
         z = game.result()
 

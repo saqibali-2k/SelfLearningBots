@@ -6,9 +6,10 @@ import numpy as np
 
 ALPHA = 0.8
 EPSILON = 0.2
+C_PUCT = 1.0
+TURN_CUTOFF = 10
 
 NUM_SIMULATIONS = 200
-C_PUCT = 1.0
 
 
 class TreeNode:
@@ -41,8 +42,8 @@ class MonteCarloTS:
         self.visited = set()
         self.nnet = neural_net
 
-    def get_best_action(self, node: TreeNode, training: bool):
-        if not training:
+    def get_best_action(self, node: TreeNode, turns: int):
+        if turns > TURN_CUTOFF:
             max_N, best = -float("inf"), None
             for move in node.state.get_actions():
                 if move in node.children:
@@ -62,10 +63,10 @@ class MonteCarloTS:
                 best = None
             return best
 
-    def search(self, training=True):
+    def search(self, turns: int):
         for _ in range(NUM_SIMULATIONS):
             self._simulation(self.curr)
-        best = self.get_best_action(self.curr, training=training)
+        best = self.get_best_action(self.curr, turns)
         if best is not None:
             # indicates bug, we shouldn't be choosing moves we haven't explored
             assert best in self.curr.children
