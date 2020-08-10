@@ -95,10 +95,9 @@ class Game:
 
         raise NotImplementedError
 
-    def result(self) -> Optional[int]:
+    def result(self) -> str:
         """
-        Return the reward if game has ended, else return None. Return value should be positive if player 1 wins, and
-        negative if player 2 wins.
+        Return '1-0' if player 1 wins. Return '0-1' if player 2 wins, and return '*' if game has not ended, or is a tie.
         """
 
         raise NotImplementedError

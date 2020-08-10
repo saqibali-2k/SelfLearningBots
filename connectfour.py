@@ -13,6 +13,7 @@ class Connect4Game(Game):
     def __init__(self):
         self.game_over = False
         self.reward = None
+        self._result = '*'
         self.p1_array = np.zeros((6, 7))
         self.p2_array = np.zeros((6, 7))
         # turn 1 = p1, turn -1 = p2
@@ -39,6 +40,7 @@ class Connect4Game(Game):
             self.game_over = self._check_four(i, action, arr)
             if self.game_over:
                 self.reward = 1
+                self._result = {1: "1-0", -1: "0-1"}[self.turn]
 
             tie = True
             for i in range(7):
@@ -78,8 +80,8 @@ class Connect4Game(Game):
     def is_over(self) -> bool:
         return self.game_over
 
-    def result(self) -> Optional[int]:
-        return self.reward
+    def result(self) -> str:
+        return self._result
 
     def get_actions(self):
         lst = []
@@ -108,7 +110,7 @@ class Connect4State(State):
 
     def is_end(self) -> Optional[int]:
         if self.game.is_over():
-            return self.game.result()
+            return self.game.reward
 
     def get_nn_input(self):
         p1_board, p2_board = self.get_representation()

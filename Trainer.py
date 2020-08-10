@@ -103,9 +103,9 @@ class Trainer:
             game.take_action(move)
 
         turn_multiplier = 1
-        for node in visited_nodes:
+        for node in visited_nodes[::-1]:
             new_policy = mcts.get_improved_policy(node, include_empty_spots=True)
-            z = game.result()
+            z = game.reward
             z *= turn_multiplier
             turn_multiplier *= -1
             inputs.append(node.state.get_nn_input())
@@ -177,13 +177,13 @@ class Trainer:
 
         z = game.result()
 
-        if z > 0 and turns["new"] == "p1":
+        if z == "1-0" and turns["new"] == "p1":
             new_model_wins += 1
-        elif z < 0 and turns["new"] == "p2":
+        elif z == "0-1" and turns["new"] == "p2":
             new_model_wins += 1
-        elif z > 0 and turns["best"] == "p1":
+        elif z == "1-0" and turns["best"] == "p1":
             best_model_wins += 1
-        elif z < 0 and turns["best"] == "p2":
+        elif z == "0-1" and turns["best"] == "p2":
             best_model_wins += 1
 
         return new_model_wins, best_model_wins
