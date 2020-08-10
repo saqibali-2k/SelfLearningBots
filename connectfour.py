@@ -31,7 +31,7 @@ class Connect4Game(Game):
                 arr = self.p2_array
 
             for i in range(5, -1, -1):
-                if arr[i, action] == 0:
+                if self.p1_array[i, action] == 0 and self.p2_array[i, action] == 0:
                     arr[i, action] = 1
                     break
 

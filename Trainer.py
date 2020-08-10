@@ -102,6 +102,8 @@ class Trainer:
             move = mcts.search()
             game.take_action(move)
 
+        print(game.p1_array)
+        print(game.p2_array)
         turn_multiplier = 1
         for node in visited_nodes:
             new_policy = mcts.get_improved_policy(node, include_empty_spots=True)
