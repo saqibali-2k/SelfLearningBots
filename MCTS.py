@@ -5,11 +5,11 @@ from random import choices
 import numpy as np
 
 ALPHA = 0.8
-EPSILON = 0.2
+EPSILON = 0.12
 C_PUCT = 1.0
 TURN_CUTOFF = 10
 
-NUM_SIMULATIONS = 200
+NUM_SIMULATIONS = 100
 
 
 class TreeNode:
@@ -68,10 +68,14 @@ class MonteCarloTS:
             self._simulation(self.curr)
         best = self.get_best_action(self.curr, turns)
         if best is not None:
-            # indicates bug, we shouldn't be choosing moves we haven't explored
-            assert best in self.curr.children
+            # There is a low probability we might choose a move we haven't explored
+            if best not in self.curr.children:
+                new_state = self.curr.state.transition_state(best)
+                self.curr.children[best] = TreeNode(new_state)
+                self.curr = self.curr.children[best]
+            else:
 
-            self.curr = self.curr.children[best]
+                self.curr = self.curr.children[best]
         return best
 
     def enemy_move(self, move):
@@ -101,7 +105,7 @@ class MonteCarloTS:
             dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
             for i, action in enumerate(legal_moves):
 
-                multiplier = (1 - EPSILON) * C_PUCT * self.get_policy(curr, action) * EPSILON * dirichlet_noise[i]
+                multiplier = C_PUCT * ((1 - EPSILON) * self.get_policy(curr, action) + EPSILON * dirichlet_noise[i])
 
                 if action in curr.children:
                     node = curr.children[action]
