@@ -67,7 +67,7 @@ class Trainer:
             if win_ratio >= 0.55:
                 best_model = contender
 
-            print(f'Training iter {_}: new model won {contender_wins}')
+            print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
             best_model.save_weights(BEST_PATH)
 
     def self_play(self, iteration):
