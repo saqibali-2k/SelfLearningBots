@@ -42,7 +42,7 @@ class Connect4Game(Game):
 
             tie = True
             for i in range(7):
-                if self.p1_array[0, i] == 0 or self.p2_array[0, i] == 0:
+                if self.p1_array[0, i] == 0 and self.p2_array[0, i] == 0:
                     tie = False
                     break
             if tie:
