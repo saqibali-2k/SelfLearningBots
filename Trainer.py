@@ -1,6 +1,7 @@
 import torch.multiprocessing as mp
 from tqdm import tqdm
 from MCTS import MonteCarloTS
+from os import mkdir, path
 
 SELF_GAMES = 80
 NUM_TRAINS = 100
@@ -13,12 +14,12 @@ CONTENDER_PATH = "./models/vcontender"
 
 
 class Trainer:
-    def __init__(self, net_model, game_class, num_self_play: int=SELF_GAMES, num_train_iterations: int=NUM_TRAINS,
-                 num_bot_battles: int=BOT_GAMES, self_play_cpu: int=CPU_COUNT, bot_battle_cpu: int=CPU_COUNT):
+    def __init__(self, net_model, game_class, num_self_play: int = SELF_GAMES, num_train_iterations: int = NUM_TRAINS,
+                 num_bot_battles: int = BOT_GAMES, self_play_cpu: int = CPU_COUNT, bot_battle_cpu: int = CPU_COUNT):
         """
         Create a Trainer instance.
-        :param net_model: the neural network class
-        :param game_class: the game class
+        :param net_model: the neural network class, subclass of Nnet
+        :param game_class: the game class, subclass of Game
         :param num_self_play: number of games that the bot will play against self
         :param num_train_iterations: number of iterations of the full training loop
         :param num_bot_battles: number of games that the bot will play against a possible better bot
@@ -28,7 +29,7 @@ class Trainer:
         self.net_model = net_model
         self.game_class = game_class
         self.num_self_play = num_self_play
-        self. num_train_iterations = num_train_iterations
+        self.num_train_iterations = num_train_iterations
         self.num_bot_battles = num_bot_battles
         self.self_play_cpu = self_play_cpu
         self.bot_battle_cpu = bot_battle_cpu
@@ -41,6 +42,8 @@ class Trainer:
             print("Not recognized")
 
         best_model = self.net_model()
+        if not path.exists("./models"):
+            mkdir("./models")
 
         if mode == "continue":
             try:
@@ -56,6 +59,7 @@ class Trainer:
             contender.load_weights(BEST_PATH)
 
             contender.train_model(inputs, win_loss, improved_policy)
+            contender.save_weights(CONTENDER_PATH)
 
             contender_wins, best_wins = self.bot_fight(_)
 
@@ -65,7 +69,6 @@ class Trainer:
 
             print(f'Training iter {_}: new model won {contender_wins}')
             best_model.save_weights(BEST_PATH)
-
 
     def self_play(self, iteration):
         inputs, policy, value = [], [], []
@@ -137,11 +140,11 @@ class Trainer:
 
         best_model = self.net_model()
         best_model.load_weights(BEST_PATH)
-        new_model = self.net_model
+        new_model = self.net_model()
         new_model.load_weights(CONTENDER_PATH)
 
-        mcts_best = MonteCarloTS(game.State(), best_model)
-        mcts_new = MonteCarloTS(game.State(), new_model)
+        mcts_best = MonteCarloTS(game.state(), best_model)
+        mcts_new = MonteCarloTS(game.state(), new_model)
 
         if iteration % 2 == 0:
             turns = {"best": "p1",

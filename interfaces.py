@@ -24,6 +24,9 @@ class State:
         raise NotImplementedError
 
     def is_end(self) -> Optional[int]:
+        """
+        If is end state, return the reward, otherwise return None.
+        """
         raise NotImplementedError
 
     def get_nn_input(self):
@@ -61,6 +64,14 @@ class Nnet:
     def evaluate(self, inputs):
         raise NotImplementedError
 
+    def action_to_index(self, action) -> int:
+        """
+          Maps an action to an index on the policy vector.
+        :param action: the action to be mapped.
+        :return: the index of the action on the policy vector
+        """
+        raise NotImplementedError
+
 
 class Game:
     def state(self) -> State:
@@ -93,10 +104,3 @@ class Game:
         raise NotImplementedError
 
 
-def action_to_index(action) -> int:
-    """
-      Maps an action to an index on the policy vector.
-    :param action: the action to be mapped.
-    :return: the index of the action on the policy vector
-    """
-    raise NotImplementedError

@@ -1,10 +1,10 @@
 from __future__ import annotations
-from interfaces import State, Nnet, action_to_index
-from typing import Tuple, Union, Optional
+from interfaces import State, Nnet
+from typing import Tuple, Union
 from random import choices
 import numpy as np
 
-NUM_SIMULATIONS = 1000
+NUM_SIMULATIONS = 200
 C_PUCT = 1.0
 
 
@@ -33,7 +33,7 @@ class MonteCarloTS:
     root: TreeNode
 
     def __init__(self, initial_state, neural_net: Nnet):
-        self.root = initial_state
+        self.root = TreeNode(initial_state)
         self.curr = self.root
         self.visited = set()
         self.nnet = neural_net
@@ -118,7 +118,7 @@ class MonteCarloTS:
             return -value
 
     def get_policy(self, node: TreeNode, action) -> float:
-        return node.P_init_policy[action_to_index(action)]
+        return node.P_init_policy[self.nnet.action_to_index(action)]
 
     def get_improved_policy(self, curr: TreeNode, include_empty_spots: bool = False) -> Union[
         Tuple[list, list], np.ndarray]:
@@ -132,7 +132,7 @@ class MonteCarloTS:
             policy = curr.children[move].N_num_visits / sum_visits
             move_lst += [move]
             probab += [policy]
-            array[action_to_index(move)] = policy
+            array[self.nnet.action_to_index(move)] = policy
 
         if include_empty_spots:
             return array
@@ -141,4 +141,4 @@ class MonteCarloTS:
     def feed_network(self, curr: TreeNode) -> tuple:
         policy, value = self.nnet.evaluate(curr.state.get_nn_input())
 
-        return policy[0], value.item()
+        return policy, value
