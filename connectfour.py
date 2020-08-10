@@ -22,7 +22,7 @@ class Connect4Game(Game):
         return Connect4State(deepcopy(self))
 
     def take_action(self, action: int):
-        if action > 6 or self.p1_array[0, action] == 1 or self.p2_array[0, action] == 1:
+        if action < 0 or action > 6 or self.p1_array[0, action] == 1 or self.p2_array[0, action] == 1:
             raise ValueError
         else:
             if self.turn == 1:
@@ -38,7 +38,7 @@ class Connect4Game(Game):
             # Check if four in a row occurred
             self.game_over = self._check_four(i, action, arr)
             if self.game_over:
-                self.reward = self.turn
+                self.reward = 1
 
             tie = True
             for i in range(7):
