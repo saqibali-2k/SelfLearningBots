@@ -42,20 +42,21 @@ class Trainer:
             print("Not recognized")
 
         best_model = self.net_model()
+        contender = self.net_model()
         if not path.exists("./models"):
             mkdir("./models")
 
         if mode == "continue":
             try:
                 best_model.load_weights(BEST_PATH)
+                contender.load_weights(CONTENDER_PATH)
             except FileNotFoundError:
                 print("file not found, mode is new")
         best_model.save_weights(BEST_PATH)
 
-        for _ in range(NUM_TRAINS):
+        for _ in range(self.num_train_iterations):
             inputs, improved_policy, win_loss = self.self_play(_)
 
-            contender = self.net_model()
             contender.load_weights(BEST_PATH)
 
             contender.train_model(inputs, win_loss, improved_policy)
@@ -65,7 +66,7 @@ class Trainer:
 
             win_ratio = contender_wins / self.num_bot_battles
             if win_ratio >= 0.55:
-                best_model = contender
+                best_model.load_weights(CONTENDER_PATH)
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
             best_model.save_weights(BEST_PATH)
