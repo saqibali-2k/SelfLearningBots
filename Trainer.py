@@ -64,8 +64,8 @@ class Trainer:
 
             contender_wins, best_wins = self.bot_fight(_)
 
-            win_ratio = contender_wins / best_wins
-            if win_ratio >= 1.33:
+            win_ratio = contender_wins / max(best_wins, 1)
+            if win_ratio >= 1.33 or contender_wins >= 11:
                 best_model.load_weights(CONTENDER_PATH)
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
