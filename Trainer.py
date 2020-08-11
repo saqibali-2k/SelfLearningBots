@@ -3,6 +3,8 @@ from tqdm import tqdm
 from MCTS import MonteCarloTS
 from os import mkdir, path
 
+WIN_RATIO_REQUIREMENT = 1.33
+
 SELF_GAMES = 80
 NUM_TRAINS = 100
 BOT_GAMES = 20
@@ -65,7 +67,7 @@ class Trainer:
             contender_wins, best_wins = self.bot_fight(_)
 
             win_ratio = contender_wins / max(best_wins, 1)
-            if win_ratio >= 1.33 or contender_wins >= 11:
+            if win_ratio >= WIN_RATIO_REQUIREMENT:
                 best_model.load_weights(CONTENDER_PATH)
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
