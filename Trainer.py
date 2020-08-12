@@ -166,8 +166,8 @@ class Trainer:
         new_model = self.net_model()
         new_model.load_weights(CONTENDER_PATH)
 
-        mcts_best = MonteCarloTS(game.state(), best_model, noise_epsilon=0)
-        mcts_new = MonteCarloTS(game.state(), new_model, noise_epsilon=0)
+        mcts_best = MonteCarloTS(game.state(), best_model, cpuct=1.0, noise_epsilon=0)
+        mcts_new = MonteCarloTS(game.state(), new_model, cpuct=1.0, noise_epsilon=0)
 
         if iteration % 2 == 0:
             turns = {"best": "p1",

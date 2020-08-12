@@ -36,12 +36,13 @@ class MonteCarloTS:
     curr: TreeNode
     root: TreeNode
 
-    def __init__(self, initial_state, neural_net: Nnet, noise_epsilon=EPSILON):
+    def __init__(self, initial_state, neural_net: Nnet, cpuct=C_PUCT, noise_epsilon=EPSILON):
         self.root = TreeNode(initial_state)
         self.curr = self.root
         self.visited = set()
         self.nnet = neural_net
         self.noise_eps = noise_epsilon
+        self.cpuct = cpuct
 
     def get_best_action(self, node: TreeNode, turns: int):
         if turns > TURN_CUTOFF:
@@ -113,8 +114,8 @@ class MonteCarloTS:
             dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
             for i, action in enumerate(legal_moves):
 
-                multiplier = C_PUCT * ((1 - self.noise_eps) * self.get_policy(curr, action) +
-                                       self.noise_eps * dirichlet_noise[i])
+                multiplier = self.cpuct * ((1 - self.noise_eps) * self.get_policy(curr, action) +
+                                           self.noise_eps * dirichlet_noise[i])
 
                 if action in curr.children:
                     node = curr.children[action]
