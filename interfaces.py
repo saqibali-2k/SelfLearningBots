@@ -55,7 +55,7 @@ class Nnet:
         """
         raise NotImplementedError
 
-    def train_model(self, inputs: list, expected_values: list, expected_policies: list):
+    def train_model(self, lr: int, inputs: list, expected_values: list, expected_policies: list):
         """Train the model using inputs and expected_values.
 
         Optional: If you want to implement a progress bar, use tqdm.

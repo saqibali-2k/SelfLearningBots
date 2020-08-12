@@ -4,12 +4,12 @@ from typing import Tuple, Union
 from random import choices
 import numpy as np
 
-ALPHA = 0.8
-EPSILON = 0.12
-C_PUCT = 1.0
+ALPHA = 0.03
+EPSILON = 0.1
+C_PUCT = 1.5
 TURN_CUTOFF = 10
 
-NUM_SIMULATIONS = 100
+NUM_SIMULATIONS = 50
 
 
 class TreeNode:
@@ -36,11 +36,12 @@ class MonteCarloTS:
     curr: TreeNode
     root: TreeNode
 
-    def __init__(self, initial_state, neural_net: Nnet):
+    def __init__(self, initial_state, neural_net: Nnet, noise_epsilon=EPSILON):
         self.root = TreeNode(initial_state)
         self.curr = self.root
         self.visited = set()
         self.nnet = neural_net
+        self.noise_eps = noise_epsilon
 
     def get_best_action(self, node: TreeNode, turns: int):
         if turns > TURN_CUTOFF:
@@ -100,12 +101,20 @@ class MonteCarloTS:
             return -1 * value
         else:
             best_action, selected_child, max_u = None, None, -float("inf")
-            sum_visits = curr.N_num_visits
+
+            sum_visits = 0
+
+            for move in curr.children:
+                sum_visits += curr.children[move].N_num_visits
+
+            sum_visits = max(sum_visits, 1)
+
             legal_moves = curr.state.get_actions()
             dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
             for i, action in enumerate(legal_moves):
 
-                multiplier = C_PUCT * ((1 - EPSILON) * self.get_policy(curr, action) + EPSILON * dirichlet_noise[i])
+                multiplier = C_PUCT * ((1 - self.noise_eps) * self.get_policy(curr, action) +
+                                       self.noise_eps * dirichlet_noise[i])
 
                 if action in curr.children:
                     node = curr.children[action]
@@ -135,7 +144,12 @@ class MonteCarloTS:
         Tuple[list, list], np.ndarray]:
         array = np.zeros(curr.state.policy_size())
 
-        sum_visits = max(curr.N_num_visits - 1, 1)
+        sum_visits = 0
+
+        for move in curr.children:
+            sum_visits += curr.children[move].N_num_visits
+
+        sum_visits = max(sum_visits, 1)
 
         move_lst = []
         probab = []
@@ -151,5 +165,6 @@ class MonteCarloTS:
 
     def feed_network(self, curr: TreeNode) -> tuple:
         policy, value = self.nnet.evaluate(curr.state.get_nn_input())
-
+        policy = np.array(policy)
+        policy = policy / np.linalg.norm(policy)
         return policy, value

@@ -5,18 +5,18 @@ from os import mkdir, path
 
 WIN_RATIO_REQUIREMENT = 1.33
 
-SELF_GAMES = 80
+SELF_EXAMPLES = 30000
 NUM_TRAINS = 100
 BOT_GAMES = 20
 
 CPU_COUNT = mp.cpu_count() - 1
-
-BEST_PATH = "./models/vbest"
-CONTENDER_PATH = "./models/vcontender"
+BEST_GENERATIONS_PATH = "./models/best_v"
+BEST_PATH = "./models/temp/vbest"
+CONTENDER_PATH = "./models/temp/vcontender"
 
 
 class Trainer:
-    def __init__(self, net_model, game_class, num_self_play: int = SELF_GAMES, num_train_iterations: int = NUM_TRAINS,
+    def __init__(self, net_model, game_class, num_self_play: int = SELF_EXAMPLES, num_train_iterations: int = NUM_TRAINS,
                  num_bot_battles: int = BOT_GAMES, self_play_cpu: int = CPU_COUNT, bot_battle_cpu: int = CPU_COUNT):
         """
         Create a Trainer instance.
@@ -45,8 +45,11 @@ class Trainer:
 
         best_model = self.net_model()
         contender = self.net_model()
-        if not path.exists("./models"):
-            mkdir("./models")
+        total_steps = 0
+        best_model_gen = 1
+
+        if not path.exists("./models/temp"):
+            mkdir("./models/temp")
 
         if mode == "continue":
             try:
@@ -61,7 +64,16 @@ class Trainer:
 
             contender.load_weights(BEST_PATH)
 
-            contender.train_model(inputs, win_loss, improved_policy)
+            if total_steps < 500:
+                lr = 1e-2
+            elif total_steps < 2000:
+                lr = 1e-3
+            elif total_steps < 9000:
+                lr = 1e-4
+            else:
+                lr = 2.5e-5
+
+            total_steps += contender.train_model(lr, inputs, win_loss, improved_policy)
             contender.save_weights(CONTENDER_PATH)
 
             contender_wins, best_wins = self.bot_fight(_)
@@ -69,25 +81,31 @@ class Trainer:
             win_ratio = contender_wins / max(best_wins, 1)
             if win_ratio >= WIN_RATIO_REQUIREMENT:
                 best_model.load_weights(CONTENDER_PATH)
+                best_model.save_weights(BEST_GENERATIONS_PATH + str(best_model_gen))
+                best_model_gen += 1
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
             best_model.save_weights(BEST_PATH)
 
     def self_play(self, iteration):
         inputs, policy, value = [], [], []
+        total_examples = 0
 
-        pool = mp.Pool(self.self_play_cpu)
-        results_objs = [pool.apply_async(self.async_episode) for _ in range(self.num_self_play)]
-        pool.close()
+        p_bar = tqdm(total=self.num_self_play, desc=f"Self-play-{iteration}")
 
-        p_bar = tqdm(range(len(results_objs)), desc=f"Self-play-{iteration}")
+        while total_examples < self.num_self_play:
+            pool = mp.Pool(self.self_play_cpu)
+            results_objs = [pool.apply_async(self.async_episode) for _ in range(16)]
+            pool.close()
 
-        for i in p_bar:
-            result = results_objs[i]
-            result = result.get()
-            inputs += result[0]
-            value += result[1]
-            policy += result[2]
+            for result in results_objs:
+                result = result.get()
+                inputs += result[0]
+                value += result[1]
+                policy += result[2]
+                p_bar.update(len(result[0]))
+                total_examples += len(result[0])
+        p_bar.close()
         return inputs, policy, value
 
     def async_episode(self) -> tuple:
@@ -148,8 +166,8 @@ class Trainer:
         new_model = self.net_model()
         new_model.load_weights(CONTENDER_PATH)
 
-        mcts_best = MonteCarloTS(game.state(), best_model)
-        mcts_new = MonteCarloTS(game.state(), new_model)
+        mcts_best = MonteCarloTS(game.state(), best_model, noise_epsilon=0)
+        mcts_new = MonteCarloTS(game.state(), new_model, noise_epsilon=0)
 
         if iteration % 2 == 0:
             turns = {"best": "p1",
