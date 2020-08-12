@@ -3,7 +3,7 @@ from tqdm import tqdm
 from MCTS import MonteCarloTS
 from os import mkdir, path
 
-WIN_RATIO_REQUIREMENT = 1.33
+WIN_RATIO_REQUIREMENT = 0.55
 
 SELF_EXAMPLES = 30000
 NUM_TRAINS = 100
@@ -78,7 +78,7 @@ class Trainer:
 
             contender_wins, best_wins = self.bot_fight(_)
 
-            win_ratio = contender_wins / max(best_wins, 1)
+            win_ratio = contender_wins / self.num_bot_battles
             if win_ratio >= WIN_RATIO_REQUIREMENT:
                 best_model.load_weights(CONTENDER_PATH)
                 best_model.save_weights(BEST_GENERATIONS_PATH + str(best_model_gen))
