@@ -195,7 +195,7 @@ class ValuePolicyNet(torch.nn.Module):
 
         # Policy head
         policy = self.fc_layer_policy(torch.reshape(res_out, (res_out.shape[0], -1)))
-        policy = torch.nn.functional.log_softmax(policy, dim=1)
+        policy = torch.nn.functional.softmax(policy, dim=1)
 
         return value, policy
 
@@ -260,7 +260,7 @@ class Connect4Model(Nnet):
                 value_pred = torch.flatten(value_pred)
 
                 # Calculate losses
-                policy_loss = -1 * policy_expected_batch.mm(policy_pred.to(device).transpose(0, 1)).sum()
+                policy_loss = -1 * torch.sum(policy_expected_batch * torch.log(policy_pred + 1e-7))
                 value_loss = (value_pred.to(device) - value_expected_batch).pow(2).sum()
 
                 loss = policy_loss + value_loss
