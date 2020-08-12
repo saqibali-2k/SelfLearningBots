@@ -63,8 +63,6 @@ class Trainer:
         for _ in range(self.num_train_iterations):
             inputs, improved_policy, win_loss = self.self_play(_)
 
-            contender.load_weights(BEST_PATH)
-
             if total_steps < 500:
                 lr = 1e-2
             elif total_steps < 2000:
