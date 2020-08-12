@@ -5,8 +5,8 @@ from copy import deepcopy
 import torch
 import tqdm
 
-EPOCHS = 20
-BATCH_SIZE = 256
+EPOCHS = 5
+BATCH_SIZE = 512
 
 
 class Connect4Game(Game):
@@ -216,7 +216,7 @@ class Connect4Model(Nnet):
     def save_weights(self, path: str):
         torch.save(self.model.state_dict(), path)
 
-    def train_model(self, inputs: list, expected_values: list, expected_policies: list):
+    def train_model(self, lr, inputs: list, expected_values: list, expected_policies: list):
         self.model.train()
         inputs = np.array(inputs)
         expected_values = np.array(expected_values)
@@ -227,8 +227,8 @@ class Connect4Model(Nnet):
         else:
             device = torch.device("cpu")
 
-        optimizer = torch.optim.Adam(self.model.parameters(), weight_decay=1e-4)
-
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, weight_decay=1e-4)
+        steps = 0
         for i in range(EPOCHS):
 
             num_batches = expected_values.shape[0] // min(BATCH_SIZE, expected_values.shape[0])
@@ -275,9 +275,11 @@ class Connect4Model(Nnet):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                steps += 1
 
         del policy_expected_batch, value_expected_batch
         del value_pred, policy_pred
+        return steps
 
     def evaluate(self, inputs):
         self.model.eval()
