@@ -87,9 +87,9 @@ class Trainer:
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
             best_model.save_weights(BEST_PATH)
-            self._save_checpoint([total_steps, best_model_gen])
+            self._save_checkpoint([total_steps, best_model_gen])
 
-    def _save_checpoint(self, lst):
+    def _save_checkpoint(self, lst):
         file = open("./paramters_checkpoint.txt", 'w')
         for item in lst:
             file.write(str(item) + ",")
