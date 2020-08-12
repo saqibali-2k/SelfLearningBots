@@ -55,6 +55,7 @@ class Trainer:
             try:
                 best_model.load_weights(BEST_PATH)
                 contender.load_weights(CONTENDER_PATH)
+                total_steps, best_model_gen = self._load_checkpoint()
             except FileNotFoundError:
                 print("file not found, mode is new")
         best_model.save_weights(BEST_PATH)
@@ -86,6 +87,20 @@ class Trainer:
 
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
             best_model.save_weights(BEST_PATH)
+            self._save_checpoint([total_steps, best_model_gen])
+
+    def _save_checpoint(self, lst):
+        file = open("./paramters_checkpoint.txt", 'w')
+        for item in lst:
+            file.write(str(item) + ",")
+        file.close()
+
+    def _load_checkpoint(self) -> list:
+        file = open("./paramters_checkpoint.txt", 'r')
+        items = file.readline()
+        items = items.split(",")
+        file.close()
+        return items[:-1]
 
     def self_play(self, iteration):
         inputs, policy, value = [], [], []
