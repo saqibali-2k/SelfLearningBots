@@ -57,6 +57,7 @@ class Trainer:
                 best_model.load_weights(BEST_PATH)
                 contender.load_weights(CONTENDER_PATH)
                 total_steps, best_model_gen = self._load_checkpoint()
+                total_steps, best_model_gen = int(total_steps), int(best_model_gen)
             except FileNotFoundError:
                 print("file not found, mode is new")
         best_model.save_weights(BEST_PATH)
@@ -84,7 +85,8 @@ class Trainer:
                 best_model.save_weights(BEST_GENERATIONS_PATH + str(best_model_gen))
                 best_model_gen += 1
 
-            print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins}')
+            print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins} '
+                  f'(GEN: {best_model_gen - 1})')
             best_model.save_weights(BEST_PATH)
             self._save_checkpoint([total_steps, best_model_gen])
 
