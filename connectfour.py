@@ -92,12 +92,11 @@ class Connect4Game(Game):
 
     def get_reward(self) -> Optional[int]:
         if self.is_over():
-            winner = {"1-0": 1, "0-1": -1}[self.result()]
+            winner = {"1-0": 1, "0-1": -1, "*": None}[self.result()]
 
-            if self.result() == "*":
+            if winner is None:
                 return 0
-
-            if self.turn == winner:
+            elif self.turn == winner:
                 return 1
             else:
                 return -1
