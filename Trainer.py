@@ -143,7 +143,7 @@ class Trainer:
             game.take_action(move)
             turn_count += 1
 
-        turn_multiplier = 1
+        turn_multiplier = -1
         for node in visited_nodes[::-1]:
             new_policy = mcts.get_improved_policy(node, include_empty_spots=True)
             z = game.get_reward()
