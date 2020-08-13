@@ -10,7 +10,6 @@ BATCH_SIZE = 512
 class Connect4Game(Game):
     def __init__(self):
         self.game_over = False
-        self.reward = None
         self._result = '*'
         self.p1_array = np.zeros((6, 7))
         self.p2_array = np.zeros((6, 7))
@@ -21,6 +20,10 @@ class Connect4Game(Game):
         return Connect4State(deepcopy(self))
 
     def take_action(self, action: int):
+
+        if self.game_over:
+            return
+
         if action < 0 or action > 6 or self.p1_array[0, action] == 1 or self.p2_array[0, action] == 1:
             raise ValueError
         else:
@@ -38,7 +41,7 @@ class Connect4Game(Game):
             # Check if four in a row occurred
             self.game_over = self._check_four(i, action, arr)
             if self.game_over:
-                self.reward = 1
+                # Negative since, now the turn is
                 self._result = {1: "1-0", -1: "0-1"}[self.turn]
 
             tie = True
@@ -48,7 +51,7 @@ class Connect4Game(Game):
                     break
             if tie:
                 self.game_over = True
-                self.reward = 0
+                self._result = "*"
 
             # Switch turns
             self.turn *= -1
@@ -87,6 +90,18 @@ class Connect4Game(Game):
     def is_over(self) -> bool:
         return self.game_over
 
+    def get_reward(self) -> Optional[int]:
+        if self.is_over():
+            winner = {"1-0": 1, "0-1": -1}[self.result()]
+
+            if self.result() == "*":
+                return 0
+
+            if self.turn == winner:
+                return 1
+            else:
+                return -1
+
     def result(self) -> str:
         return self._result
 
@@ -99,6 +114,9 @@ class Connect4Game(Game):
                 if slots_used != 6:
                     lst.append(i)
         return lst
+
+    def __repr__(self):
+        return (np.array(self.p1_array, np.uint32) + -1 * np.array(self.p2_array, np.uint32)).__repr__()
 
 
 class Connect4State(State):
@@ -117,8 +135,7 @@ class Connect4State(State):
         return self.game.p1_array, self.game.p2_array
 
     def is_end(self) -> Optional[int]:
-        if self.game.is_over():
-            return self.game.reward
+        return self.game.get_reward()
 
     def get_nn_input(self):
         p1_board, p2_board = self.get_representation()
