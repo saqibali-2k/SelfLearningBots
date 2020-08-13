@@ -142,7 +142,7 @@ class MonteCarloTS:
         return node.P_init_policy[self.nnet.action_to_index(action)]
 
     def get_improved_policy(self, curr: TreeNode, include_empty_spots: bool = False) -> Union[
-        Tuple[list, list], np.ndarray]:
+                            Tuple[list, list], np.ndarray]:
         array = np.zeros(curr.state.policy_size())
 
         sum_visits = 0
