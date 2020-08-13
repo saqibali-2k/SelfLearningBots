@@ -17,7 +17,8 @@ class State:
 
     def is_end(self) -> Optional[int]:
         """
-        If is end state, return the reward, otherwise return None.
+        If is end state, return the reward, otherwise return None. If player whose turn it is won, return 1, else return
+        -1.
         """
         raise NotImplementedError
 
@@ -55,6 +56,14 @@ class Game:
         """
        Return true iff the game has ended.
        """
+
+        raise NotImplementedError
+
+    def get_reward(self) -> Optional[int]:
+        """
+        Return 1, if the player whose turn it is won. Return -1 if the player whose turn it is lost. Return 0 for ties.
+        If game has not ended. Return None.
+        """
 
         raise NotImplementedError
 
