@@ -16,8 +16,9 @@ CONTENDER_PATH = "./models/temp/vcontender"
 
 
 class Trainer:
-    def __init__(self, net_model, game_class, num_self_play: int = SELF_EXAMPLES, num_train_iterations: int = NUM_TRAINS,
-                 num_bot_battles: int = BOT_GAMES, self_play_cpu: int = CPU_COUNT, bot_battle_cpu: int = CPU_COUNT):
+    def __init__(self, net_model, game_class, num_self_play: int = SELF_EXAMPLES,
+                 num_train_iterations: int = NUM_TRAINS, num_bot_battles: int = BOT_GAMES,
+                 self_play_cpu: int = CPU_COUNT, bot_battle_cpu: int = CPU_COUNT):
         """
         Create a Trainer instance.
         :param net_model: the neural network class, subclass of Nnet
@@ -87,13 +88,15 @@ class Trainer:
             best_model.save_weights(BEST_PATH)
             self._save_checkpoint([total_steps, best_model_gen])
 
-    def _save_checkpoint(self, lst):
+    @staticmethod
+    def _save_checkpoint(lst):
         file = open("./paramters_checkpoint.txt", 'w')
         for item in lst:
             file.write(str(item) + ",")
         file.close()
 
-    def _load_checkpoint(self) -> list:
+    @staticmethod
+    def _load_checkpoint() -> list:
         file = open("./paramters_checkpoint.txt", 'r')
         items = file.readline()
         items = items.split(",")
