@@ -140,7 +140,12 @@ class Connect4State(State):
         p1_board, p2_board = self.get_representation()
         turn_board = np.zeros((6, 7))
         turn_board[:, :] = self.game.turn
-        return np.array([p1_board, p2_board, turn_board])
+        if self.game.turn == 1:
+            return np.array([p1_board, p2_board])
+        else:
+            # Player 2 turn
+            return np.array([p2_board, p1_board])
+        # return np.array([p1_board, p2_board, turn_board])
 
     def policy_size(self) -> int:
         return 7
@@ -149,7 +154,7 @@ class Connect4State(State):
 class Connect4WrapperModel(DefaultModel):
 
     def __init__(self):
-        super().__init__(input_size=(3, 6, 7), policy_size=7, num_res_blocks=3)
+        super().__init__(input_size=(2, 6, 7), policy_size=7, num_res_blocks=3)
 
     def action_to_index(self, action):
         # actions range from 0-6 (column on the connect4 board), this is directly mapped to a vector of length 7
