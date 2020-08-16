@@ -39,3 +39,12 @@ if __name__ == '__main__':
 
     trainer.training_pipeline()
 ```
+
+## TODOs and Update Logs ##
+| Date         | Update       |
+|--------------|--------------|
+| Aug. 15 2020 | Started Logs |
+
+_TODOs_:
+* Asynchronous MCTS
+* Asynchronize the whole training process
