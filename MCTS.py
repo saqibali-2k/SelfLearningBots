@@ -9,7 +9,7 @@ EPSILON = 0.1
 C_PUCT = 1.5
 TURN_CUTOFF = 10
 
-NUM_SIMULATIONS = 50
+NUM_SIMULATIONS = 100
 
 
 class TreeNode:
@@ -36,16 +36,17 @@ class MonteCarloTS:
     curr: TreeNode
     root: TreeNode
 
-    def __init__(self, initial_state, neural_net: Nnet, cpuct=C_PUCT, noise_epsilon=EPSILON):
+    def __init__(self, initial_state, neural_net: Nnet, cpuct=C_PUCT, noise_epsilon=EPSILON, turn_cutoff=TURN_CUTOFF):
         self.root = TreeNode(initial_state)
         self.curr = self.root
         self.visited = set()
         self.nnet = neural_net
         self.noise_eps = noise_epsilon
         self.cpuct = cpuct
+        self.turn_cutoff = turn_cutoff
 
     def get_best_action(self, node: TreeNode, turns: int):
-        if turns > TURN_CUTOFF:
+        if turns >= self.turn_cutoff:
             max_N, best = -float("inf"), None
             for move in node.state.get_actions():
                 if move in node.children:
@@ -58,6 +59,8 @@ class MonteCarloTS:
             return best
         else:
             move_lst, prob = self.get_improved_policy(node)
+            # print(prob)
+            # print(node.state.get_actions())
             if len(move_lst) != 0:
                 best = choices(move_lst, weights=prob)
                 best = best[0]
@@ -111,11 +114,16 @@ class MonteCarloTS:
             sum_visits = max(sum_visits, 1)
 
             legal_moves = curr.state.get_actions()
-            dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
+            if curr is self.curr:
+                dirichlet_noise = np.random.dirichlet([ALPHA] * len(legal_moves))
+
             for i, action in enumerate(legal_moves):
 
-                multiplier = self.cpuct * ((1 - self.noise_eps) * self.get_policy(curr, action) +
-                                           self.noise_eps * dirichlet_noise[i])
+                if self.curr is curr:
+                    multiplier = self.cpuct * ((1 - self.noise_eps) * self.get_policy(curr, action) +
+                                               self.noise_eps * dirichlet_noise[i])
+                else:
+                    multiplier = self.cpuct * self.get_policy(curr, action)
 
                 if action in curr.children:
                     node = curr.children[action]
@@ -167,5 +175,5 @@ class MonteCarloTS:
     def feed_network(self, curr: TreeNode) -> tuple:
         policy, value = self.nnet.evaluate(curr.state.get_nn_input())
         policy = np.array(policy)
-        policy = policy / np.linalg.norm(policy)
+        # print(policy)
         return policy, value
