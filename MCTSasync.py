@@ -1,12 +1,18 @@
 from __future__ import annotations
 from interfaces import State, Nnet
 import numpy as np
+import concurrent.futures
+import time
 
 ALPHA = 0.03
 EPSILON = 0.1
 C_PUCT = 1.5
+# Cutoff at which we choose deterministically instead of sampling from multinomial distribution
 TURN_CUTOFF = 10
 
+# Virtual loss for parallel simulations -> reduce Q + U so that simulations traverse different paths
+VIRTUAL_LOSS = 3
+NUM_PARALLEL_SIMS = 2
 NUM_SIMULATIONS = 50
 
 
@@ -42,6 +48,7 @@ class MonteCarloTS:
     def __init__(self, initial_state, neural_net: Nnet, cpuct=C_PUCT, noise_epsilon=EPSILON, turn_cutoff=TURN_CUTOFF):
         self.root = TreeNode(initial_state)
         self.curr = self.root
+        self.expanding = set()
         self.visited = {}
         self.nnet = neural_net
         self.noise_eps = noise_epsilon
@@ -70,16 +77,20 @@ class MonteCarloTS:
             return best
 
     def search(self, turns: int):
+
         key = hash(self.curr)
         if key in self.visited:
             self.curr = self.visited[key]
 
-        for _ in range(NUM_SIMULATIONS):
-            self._simulation(self.curr, is_root=True)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PARALLEL_SIMS) as executor:
+            for _ in range(NUM_SIMULATIONS):
+                executor.submit(self._simulation, curr=self.curr, is_root=True)
 
         best = self.get_best_action(self.curr, turns)
-        print(self.curr.N_num_visits)
-        print(self.curr.P_init_policy)
+        # print(self.curr.N_num_visits)
+        # print(self.curr.P_init_policy)
+        # print(self.curr.W_state_val)
+        # print(self.curr.get_Q())
         self.curr = TreeNode(self.curr.state.transition_state(best))
 
         return best
@@ -93,9 +104,14 @@ class MonteCarloTS:
             return -1 * reward
 
         key = hash(curr)
-        if key not in self.visited:
+        while key in self.expanding:
+            time.sleep(0.000001)
+
+        if key not in self.visited and key not in self.expanding:
+            self.expanding.add(key)
             curr.P_init_policy, value = self.feed_network(curr)
             self.visited[key] = curr
+            self.expanding.remove(key)
             return -1 * value
         else:
             curr = self.visited[key]
@@ -117,10 +133,13 @@ class MonteCarloTS:
             action = self.nnet.index_to_action(action_index)
 
             selected_child = TreeNode(curr.state.transition_state(action))
+            curr.N_num_visits[action] += VIRTUAL_LOSS
+            curr.W_state_val[action] -= VIRTUAL_LOSS
 
             value = self._simulation(selected_child)
-            curr.N_num_visits[action_index] += 1
-            curr.W_state_val[action_index] += value
+
+            curr.N_num_visits[action] += 1 - VIRTUAL_LOSS
+            curr.W_state_val[action] += value + VIRTUAL_LOSS
             return -value
 
     def get_policy(self, node: TreeNode, action) -> float:

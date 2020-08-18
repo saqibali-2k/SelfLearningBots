@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional
+import numpy as np
 
 
 class State:
@@ -9,9 +10,9 @@ class State:
         """
         raise NotImplementedError
 
-    def get_actions(self) -> list:
+    def get_actions(self) -> np.ndarray:
         """
-        Return list of legal actions to take at this state.
+        Return vector of
         """
         raise NotImplementedError
 
@@ -97,10 +98,20 @@ class Nnet:
     def evaluate(self, inputs):
         raise NotImplementedError
 
-    def action_to_index(self, action) -> int:
+    @staticmethod
+    def action_to_index(action) -> int:
         """
           Maps an action to an index on the policy vector.
         :param action: the action to be mapped.
         :return: the index of the action on the policy vector
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def index_to_action(index):
+        """
+          Maps an index to an action on the policy vector.
+        :param index: the index to be mapped.
+        :return: the action of the index on the policy vector
         """
         raise NotImplementedError
