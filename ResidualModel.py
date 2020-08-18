@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import tqdm
 
-EPOCHS = 5
+EPOCHS = 10
 BATCH_SIZE = 512
 
 
@@ -175,5 +175,10 @@ class DefaultModel(Nnet):
             # Return only the policy vector, and the value scalar
             return policy.cpu()[0], value.cpu().item()
 
-    def action_to_index(self, action):
+    @staticmethod
+    def action_to_index(action):
+        raise NotImplementedError
+
+    @staticmethod
+    def index_to_action(index):
         raise NotImplementedError

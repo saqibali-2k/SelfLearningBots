@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 from tqdm import tqdm
-from MCTS import MonteCarloTS
+from MCTSasync import MonteCarloTS
 from os import mkdir, path
 
 WIN_RATIO_REQUIREMENT = 0.55
@@ -50,6 +50,8 @@ class Trainer:
         best_model_gen = 1
 
         if not path.exists("./models/temp"):
+            if not path.exists("./models"):
+                mkdir("./models")
             mkdir("./models/temp")
 
         if mode == "continue":
@@ -92,14 +94,14 @@ class Trainer:
 
     @staticmethod
     def _save_checkpoint(lst):
-        file = open("./paramters_checkpoint.txt", 'w')
+        file = open("parameters_checkpoint.txt", 'w')
         for item in lst:
             file.write(str(item) + ",")
         file.close()
 
     @staticmethod
     def _load_checkpoint() -> list:
-        file = open("./paramters_checkpoint.txt", 'r')
+        file = open("parameters_checkpoint.txt", 'r')
         items = file.readline()
         items = items.split(",")
         file.close()
@@ -145,7 +147,7 @@ class Trainer:
 
         turn_multiplier = -1
         for node in visited_nodes[::-1]:
-            new_policy = mcts.get_improved_policy(node, include_empty_spots=True)
+            new_policy = mcts.get_improved_policy(node)
             z = game.get_reward()
             z *= turn_multiplier
             turn_multiplier *= -1
@@ -184,8 +186,8 @@ class Trainer:
         new_model = self.net_model()
         new_model.load_weights(CONTENDER_PATH)
 
-        mcts_best = MonteCarloTS(game.state(), best_model, cpuct=1.0, noise_epsilon=0)
-        mcts_new = MonteCarloTS(game.state(), new_model, cpuct=1.0, noise_epsilon=0)
+        mcts_best = MonteCarloTS(game.state(), best_model, cpuct=1.0, noise_epsilon=0, turn_cutoff=0)
+        mcts_new = MonteCarloTS(game.state(), new_model, cpuct=1.0, noise_epsilon=0, turn_cutoff=0)
 
         if iteration % 2 == 0:
             turns = {"best": "p1",
