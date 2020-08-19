@@ -3,6 +3,7 @@ from interfaces import State, Nnet
 import numpy as np
 import concurrent.futures
 import time
+import pickle
 
 ALPHA = 0.03
 EPSILON = 0.1
@@ -34,6 +35,13 @@ class TreeNode:
         """
         return self.W_state_val / np.maximum(self.N_num_visits, np.ones(self.state.policy_size()))
 
+    def serialise(self, reward):
+        return pickle.dumps([self.state.get_nn_input(), self.get_improved_policy(), reward])
+
+    def get_improved_policy(self) -> np.ndarray:
+        array = self.N_num_visits / max(float(np.sum(self.N_num_visits)), 1.0)
+        return array
+
     def __hash__(self):
         return hash(self.state)
 
@@ -56,7 +64,7 @@ class MonteCarloTS:
         self.turn_cutoff = turn_cutoff
 
     def get_best_action(self, node: TreeNode, turns: int):
-        prob = self.get_improved_policy(node)
+        prob = node.get_improved_policy()
         legal_moves = node.state.get_actions()
         prob = prob * legal_moves
 
@@ -87,10 +95,6 @@ class MonteCarloTS:
                 executor.submit(self._simulation, curr=self.curr, is_root=True)
 
         best = self.get_best_action(self.curr, turns)
-        # print(self.curr.N_num_visits)
-        # print(self.curr.P_init_policy)
-        # print(self.curr.W_state_val)
-        # print(self.curr.get_Q())
         self.curr = TreeNode(self.curr.state.transition_state(best))
 
         return best
@@ -144,11 +148,6 @@ class MonteCarloTS:
 
     def get_policy(self, node: TreeNode, action) -> float:
         return node.P_init_policy[self.nnet.action_to_index(action)]
-
-    @staticmethod
-    def get_improved_policy(curr: TreeNode) -> np.ndarray:
-        array = curr.N_num_visits / max(float(np.sum(curr.N_num_visits)), 1.0)
-        return array
 
     def feed_network(self, curr: TreeNode) -> tuple:
         policy, value = self.nnet.evaluate(curr.state.get_nn_input())
