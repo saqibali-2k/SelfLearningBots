@@ -2,6 +2,7 @@ from interfaces import *
 import numpy as np
 from copy import deepcopy
 from ResidualModel import DefaultModel
+import pickle
 
 EPOCHS = 5
 BATCH_SIZE = 512
@@ -13,6 +14,7 @@ class Connect4Game(Game):
         self._result = '*'
         self.p1_array = np.zeros((6, 7))
         self.p2_array = np.zeros((6, 7))
+
         # turn 1 = p1, turn -1 = p2
         self.turn = 1
 
@@ -105,13 +107,13 @@ class Connect4Game(Game):
         return self._result
 
     def get_actions(self):
-        lst = []
+        lst = np.zeros(7)
         if not self.is_over():
             for i in range(7):
                 slots_used = self.p1_array[:, i].sum() + self.p2_array[:, i].sum()
                 assert slots_used <= 6
                 if slots_used != 6:
-                    lst.append(i)
+                    lst[i] = 1
         return lst
 
     def __repr__(self):
@@ -127,7 +129,7 @@ class Connect4State(State):
         new_state.game.take_action(action)
         return new_state
 
-    def get_actions(self) -> list:
+    def get_actions(self) -> np.ndarray:
         return self.game.get_actions()
 
     def get_representation(self) -> tuple:
@@ -150,12 +152,20 @@ class Connect4State(State):
     def policy_size(self) -> int:
         return 7
 
+    def __hash__(self):
+        return hash(self.game.__repr__())
+
 
 class Connect4WrapperModel(DefaultModel):
 
     def __init__(self):
         super().__init__(input_size=(2, 6, 7), policy_size=7, num_res_blocks=3)
 
-    def action_to_index(self, action):
+    @staticmethod
+    def action_to_index(action):
         # actions range from 0-6 (column on the connect4 board), this is directly mapped to a vector of length 7
         return action
+
+    @staticmethod
+    def index_to_action(index):
+        return index
