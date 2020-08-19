@@ -12,7 +12,7 @@ class State:
 
     def get_actions(self) -> np.ndarray:
         """
-        Return vector of
+        Return vector of size State.policy_size(), where each valid move is labeled with a 1.
         """
         raise NotImplementedError
 

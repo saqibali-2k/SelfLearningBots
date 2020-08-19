@@ -1,7 +1,8 @@
 import torch.multiprocessing as mp
 from tqdm import tqdm
 from MCTSasync import MonteCarloTS
-from os import mkdir, path
+from os import makedirs
+import pickle
 
 WIN_RATIO_REQUIREMENT = 0.55
 
@@ -9,10 +10,13 @@ SELF_EXAMPLES = 30000
 NUM_TRAINS = 100
 BOT_GAMES = 20
 
+MAX_EXAMPLES = 180000
+
 CPU_COUNT = mp.cpu_count() - 1
 BEST_GENERATIONS_PATH = "./models/best_v"
 BEST_PATH = "./models/temp/vbest"
 CONTENDER_PATH = "./models/temp/vcontender"
+DATA_DIR = "./data/data_checkpoint"
 
 
 class Trainer:
@@ -48,24 +52,28 @@ class Trainer:
         contender = self.net_model()
         total_steps = 0
         best_model_gen = 1
+        inputs, improved_policy, win_loss = [], [], []
 
-        if not path.exists("./models/temp"):
-            if not path.exists("./models"):
-                mkdir("./models")
-            mkdir("./models/temp")
+        makedirs("./models/temp", exist_ok=True)
 
         if mode == "continue":
             try:
                 best_model.load_weights(BEST_PATH)
                 contender.load_weights(CONTENDER_PATH)
-                total_steps, best_model_gen = self._load_checkpoint()
+                params, data = self._load_checkpoint()
+                total_steps, best_model_gen = params
+                inputs, improved_policy, win_loss = data
                 total_steps, best_model_gen = int(total_steps), int(best_model_gen)
             except FileNotFoundError:
                 print("file not found, mode is new")
         best_model.save_weights(BEST_PATH)
 
         for _ in range(self.num_train_iterations):
-            inputs, improved_policy, win_loss = self.self_play(_)
+            examples = self.self_play(_)
+            inputs += examples[0]
+            improved_policy += examples[1]
+            win_loss += examples[2]
+            self.trim_to_length(inputs, improved_policy, win_loss)
 
             if total_steps < 500:
                 lr = 1e-2
@@ -90,22 +98,44 @@ class Trainer:
             print(f'Training iter {_}: new model won {contender_wins}, best model won {best_wins} '
                   f'(GEN: {best_model_gen - 1})')
             best_model.save_weights(BEST_PATH)
-            self._save_checkpoint([total_steps, best_model_gen])
+            self._save_checkpoint([total_steps, best_model_gen], [inputs, improved_policy, win_loss])
 
-    @staticmethod
-    def _save_checkpoint(lst):
+    def save_to_file(self, data):
+        makedirs(DATA_DIR, exist_ok=True)
+
+        serialised_data = pickle.dumps(data)
+        size = len(serialised_data)
+        file = open(DATA_DIR, 'wb')
+        file.write(size.to_bytes(length=64, byteorder='big', signed=False))
+        file.write(serialised_data)
+
+    def load_from_file(self):
+        file = open(DATA_DIR, 'rb')
+        obj_size = int.from_bytes(file.read(64), byteorder='big', signed=False)
+        data_serialised = file.read(obj_size)
+        return pickle.loads(data_serialised)
+
+    def _save_checkpoint(self, param, data):
         file = open("parameters_checkpoint.txt", 'w')
-        for item in lst:
+        for item in param:
             file.write(str(item) + ",")
         file.close()
+        self.save_to_file(data)
 
-    @staticmethod
-    def _load_checkpoint() -> list:
+    def _load_checkpoint(self) -> list:
         file = open("parameters_checkpoint.txt", 'r')
         items = file.readline()
         items = items.split(",")
         file.close()
-        return items[:-1]
+        return items[:-1], self.load_from_file()
+
+    def trim_to_length(self, inputs: list, policy: list, value: list):
+        if len(inputs) < NUM_TRAINS:
+            return
+        for _ in range(len(inputs) - MAX_EXAMPLES):
+            inputs.pop(0)
+            policy.pop(0)
+            value.pop(0)
 
     def self_play(self, iteration):
         inputs, policy, value = [], [], []
@@ -147,7 +177,7 @@ class Trainer:
 
         turn_multiplier = -1
         for node in visited_nodes[::-1]:
-            new_policy = mcts.get_improved_policy(node)
+            new_policy = node.get_improved_policy()
             z = game.get_reward()
             z *= turn_multiplier
             turn_multiplier *= -1
