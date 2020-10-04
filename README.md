@@ -3,7 +3,7 @@
 A library for creating your own self-learning AI based off Deepmind's Alpha-Zero.
 
 Features:
-* Works with any deterministic game
+* Works with any deterministic game (no randomness)
 * Uses multiprocessing to run multiple instances of self-play
 * Uses multithreading to parallelize the tree search algorithm (Monte Carlo Tree Search w/ Virtual Loss)
 * Adds dirichilet noise to increase variance in training data (See MCTSaysnc.py)
