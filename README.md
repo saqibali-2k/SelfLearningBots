@@ -48,7 +48,7 @@ if __name__ == '__main__':
     trainer.training_pipeline()
 ```
 ## Connect 4 Sample Example ##
-I trained a Connect4 bot for ~20 hours using the library, the associated files can be found in the connect4-example branch. Below is a sample game the bot won against me.
+I trained a Connect4 bot for ~20 hours using the library; the associated files can be found in the connect4-example branch. Below is a sample game the bot won against me.
 
 SELF-TRAINED BOT: RED
 
