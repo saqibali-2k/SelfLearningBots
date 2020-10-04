@@ -62,8 +62,8 @@ We can see that the bot always learns to play in the middle, it learns to block 
 | Date         | Update       |
 |--------------|--------------|
 | Aug. 15 2020 | Started Logs |
-| Aug. 25 2020 | Added asynchronous MCTS (used virtual loss implementation) |
+| Aug. 25 2020 | Parallelized MCTS (used virtual loss implementation) |
 
 _TODOs_:
-* <del>Asynchronous MCTS</del>
+* <del>Parallel MCTS</del>
 * Add a BotPlayer class that can play games after the bot has finished training.
