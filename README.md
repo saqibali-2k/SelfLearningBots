@@ -1,8 +1,16 @@
 # SelfLearningBots
 
-A library for creating your own self-learning AI based off Deepmind's Alpha-Zero. Uses multiprocessing to speed up training. 
+A library for creating your own self-learning AI based off Deepmind's Alpha-Zero.
 
-Note: If u decide to implement your own Neural Net model, be wary if compatibility issues with multiprocessing. Both Tensorflow and Pytorch worked fine on windows, but I had some trouble with tensorflow on a google cloud instance running Ubuntu. The provided model is an adjustable ResNet implemented in Pytorch.
+Features:
+* Works with any deterministic game
+* Uses multiprocessing to run multiple instances of self-play
+* Uses multithreading to parallelize the tree search algorithm (Monte Carlo Tree Search w/ Virtual Loss)
+* Adds dirichilet noise to increase variance in training data (See MCTSaysnc.py)
+* The whole training process is automated, you can leave it running
+* Can use any framework for Machine Learning, but a sample model is available *
+
+*Note: If u decide to implement your own Neural Net model, be wary if compatibility issues with multiprocessing. Both Tensorflow and Pytorch worked fine on windows, but I had some trouble with tensorflow on a google cloud instance running Ubuntu. The provided model is an adjustable ResNet implemented in Pytorch.
 
 ## Setup Environment ##
 Python version: 3.7.8
@@ -39,12 +47,22 @@ if __name__ == '__main__':
 
     trainer.training_pipeline()
 ```
+## Connect 4 Sample Example ##
+I trained a Connect4 bot for ~20 hours using the library, the associated files can be found in the connect4-example branch. Below is a sample game the bot won against me.
+
+SELF-TRAINED BOT: RED
+
+HUMAN-PLAYER (ME): YELLOW
+
+![Sample Game](https://github.com/saqibali-2k/SelfLearningBots/blob/master/readme_resources/connect4_samplegame.gif "Connect4 Bot Game")
+
+We can see that the bot always learns to play in the middle, it learns to block enemy wins and even forces me into an unwinnable position at the last move.
 
 ## TODOs and Update Logs ##
 | Date         | Update       |
 |--------------|--------------|
 | Aug. 15 2020 | Started Logs |
+| Aug. 25 2020 | Added asynchronous MCTS (used virtual loss implementation) |
 
 _TODOs_:
-* Asynchronous MCTS
-* Asynchronize the whole training process
+* <del>Asynchronous MCTS</del>
