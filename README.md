@@ -66,3 +66,4 @@ We can see that the bot always learns to play in the middle, it learns to block 
 
 _TODOs_:
 * <del>Asynchronous MCTS</del>
+* Add a BotPlayer class that can play games after the bot has finished training.
