@@ -22,7 +22,7 @@ Python version: 3.7.8
    `pip install torch, torchvision`
 4. To use graphics card, setup CUDA and CUDnn
 
-    Tutorial on setting up CUDA on unix through terminal: 
+    Tutorial on setting up CUDA on GCP through terminal: 
 https://towardsdatascience.com/installing-cuda-on-google-cloud-platform-in-10-minutes-9525d874c8c1
 ## Setup Game ## 
 **_For examples, see branch: Connect4-example._**
