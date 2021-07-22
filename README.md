@@ -67,3 +67,5 @@ We can see that the bot always learns to play in the middle, it learns to block 
 _TODOs_:
 * <del>Parallel MCTS</del>
 * Add a BotPlayer class that can play games after the bot has finished training.
+* Create seperate agents (trainer, self-play, nnet-model) so that each can be run in its own containerized environment
+    * This would allow for other speed optimizations (self-play converted to C or Rust for example) 
