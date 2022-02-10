@@ -6,7 +6,7 @@ Features:
 * Works with any deterministic game (no randomness)
 * Uses multiprocessing to run multiple instances of self-play
 * Uses multithreading to parallelize the tree search algorithm (Monte Carlo Tree Search w/ Virtual Loss)
-* Adds dirichilet noise to increase variance in training data (See MCTSaysnc.py)
+* Adds dirichilet noise to increase variance in training data (See MCTSasync.py)
 * The whole training process is automated, you can leave it running
 * Can use any framework for Machine Learning, but a sample model is available *
 
